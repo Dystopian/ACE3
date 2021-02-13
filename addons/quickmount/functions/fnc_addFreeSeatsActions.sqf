@@ -108,9 +108,8 @@ if (_isInVehicle) then {
 
     _cargoCompartments = getArray (_vehicleConfig >> "cargoCompartments");
     {
-        if !(_x isEqualType "") then {
-            _cargoCompartments set [_forEachIndex, format ["Compartment%1", _x]];
-        };
+        if (_x isEqualType "") then {continue};
+        _cargoCompartments set [_forEachIndex, format ["Compartment%1", _x]];
     } forEach _cargoCompartments;
     _cargoCompartmentsLast = count _cargoCompartments - 1;
 
@@ -150,84 +149,83 @@ if (_isInVehicle) then {
 private _actions = [];
 private _cargoNumber = -1;
 {
-    scopeName "crewLoop";
     _x params ["_unit", "_role", "_cargoIndex", "_turretPath", "_isPersonTurret"];
     if (!isNull _unit && {alive _unit}) then {
         if (_role == "cargo") then {
             INC(_cargoNumber);
         };
-    } else {
-        private ["_name", "_icon", "_statement", "_params"];
-        switch (toLower _role) do {
-            case "driver": {
-                if (
-                    lockedDriver _vehicle
-                    || {unitIsUAV _vehicle}
-                    || {0 == getNumber (_vehicleConfig >> "hasDriver")}
-                ) then {
-                    breakTo "crewLoop";
-                };
-                if (_isInVehicle) then {
-                    if (_compartment != _driverCompartments || {_isDriverIsolated}) then {breakTo "crewLoop"};
-                    _params = [{MOVE_IN_CODE(moveInDriver)}, _vehicle, _currentTurret, _moveBackCode, _moveBackParams];
-                    _statement = _fnc_move;
-                } else {
-                    _params = ["GetInDriver", _vehicle];
-                    _statement = {_player action (_this select 2)};
-                };
-                if (_vehicle isKindOf "Air") then {
-                    _name = localize "str_getin_pos_pilot";
-                    _icon = ICON_PILOT;
-                } else {
-                    _name = localize "str_driver";
-                    _icon = ICON_DRIVER;
-                };
+        continue;
+    };
+    private ["_name", "_icon", "_statement", "_params"];
+    switch (toLower _role) do {
+        case "driver": {
+            if (
+                lockedDriver _vehicle
+                || {unitIsUAV _vehicle}
+                || {0 == getNumber (_vehicleConfig >> "hasDriver")}
+            ) then {
+                continue;
             };
-            case "cargo": {
-                INC(_cargoNumber);
-                if (_vehicle lockedCargo _cargoIndex) then {breakTo "crewLoop"};
-                if (_isInVehicle) then {
-                    if (_compartment != (_cargoCompartments select (_cargoNumber min _cargoCompartmentsLast))) then {breakTo "crewLoop"};
-                    _params = [{MOVE_IN_CODE(moveInCargo)}, [_vehicle, _cargoIndex], _currentTurret, _moveBackCode, _moveBackParams];
-                    _statement = _fnc_move;
-                } else {
-                    _params = ["GetInCargo", _vehicle, _cargoNumber];
-                    _statement = {_player action (_this select 2)};
-                };
-                _name = format ["%1 %2", localize "str_getin_pos_passenger", _cargoNumber + 1];
-                _icon = ICON_CARGO;
+            if (_isInVehicle) then {
+                if (_compartment != _driverCompartments || {_isDriverIsolated}) then {continue};
+                _params = [{MOVE_IN_CODE(moveInDriver)}, _vehicle, _currentTurret, _moveBackCode, _moveBackParams];
+                _statement = _fnc_move;
+            } else {
+                _params = ["GetInDriver", _vehicle];
+                _statement = {_player action (_this select 2)};
             };
-            default { // all turrets including FFV
-                if (_vehicle lockedTurret _turretPath) then {breakTo "crewLoop"};
-                if (_role == "gunner" && {unitIsUAV _vehicle}) then {breakTo "crewLoop"};
-                private _turretConfig = [_vehicleConfig, _turretPath] call CBA_fnc_getTurret;
-                if (!_isInVehicle) then {
-                    _params = ["GetInTurret", _vehicle, _turretPath];
-                    _statement = {_player action (_this select 2)};
-                } else {
-                    private _gunnerCompartments = (_turretConfig >> "gunnerCompartments") call BIS_fnc_getCfgData;
-                    TO_COMPARTMENT_STRING(_gunnerCompartments);
-                    if (_compartment != _gunnerCompartments) then {breakTo "crewLoop"};
-                    _params = [{MOVE_IN_CODE(moveInTurret)}, [_vehicle, _turretPath], _currentTurret, _moveBackCode, _moveBackParams];
-                    _statement = _fnc_move;
-                };
-                _name = getText (_turretConfig >> "gunnerName");
-                _icon = switch true do {
-                    case (0 < getNumber (_turretConfig >> "isCopilot")): {ICON_PILOT};
-                    case (_role == "gunner"): {ICON_GUNNER};
-                    case (_role == "commander"): {ICON_COMMANDER};
-                    case (_isPersonTurret): {ICON_FFV};
-                    case ("" isEqualTo getText (_turretConfig >> "gun")): {ICON_CARGO};
-                    default {ICON_TURRET};
-                };
+            if (_vehicle isKindOf "Air") then {
+                _name = localize "str_getin_pos_pilot";
+                _icon = ICON_PILOT;
+            } else {
+                _name = localize "str_driver";
+                _icon = ICON_DRIVER;
             };
         };
-        private _action = [
-            format ["%1%2%3", _role, _cargoIndex, _turretPath],
-            _name, _icon, _statement, {true}, {}, _params
-        ] call EFUNC(interact_menu,createAction);
-        _actions pushBack [_action, [], _vehicle];
+        case "cargo": {
+            INC(_cargoNumber);
+            if (_vehicle lockedCargo _cargoIndex) then {continue};
+            if (_isInVehicle) then {
+                if (_compartment != (_cargoCompartments select (_cargoNumber min _cargoCompartmentsLast))) then {continue};
+                _params = [{MOVE_IN_CODE(moveInCargo)}, [_vehicle, _cargoIndex], _currentTurret, _moveBackCode, _moveBackParams];
+                _statement = _fnc_move;
+            } else {
+                _params = ["GetInCargo", _vehicle, _cargoNumber];
+                _statement = {_player action (_this select 2)};
+            };
+            _name = format ["%1 %2", localize "str_getin_pos_passenger", _cargoNumber + 1];
+            _icon = ICON_CARGO;
+        };
+        default { // all turrets including FFV
+            if (_vehicle lockedTurret _turretPath) then {continue};
+            if (_role == "gunner" && {unitIsUAV _vehicle}) then {continue};
+            private _turretConfig = [_vehicleConfig, _turretPath] call CBA_fnc_getTurret;
+            if (!_isInVehicle) then {
+                _params = ["GetInTurret", _vehicle, _turretPath];
+                _statement = {_player action (_this select 2)};
+            } else {
+                private _gunnerCompartments = (_turretConfig >> "gunnerCompartments") call BIS_fnc_getCfgData;
+                TO_COMPARTMENT_STRING(_gunnerCompartments);
+                if (_compartment != _gunnerCompartments) then {continue};
+                _params = [{MOVE_IN_CODE(moveInTurret)}, [_vehicle, _turretPath], _currentTurret, _moveBackCode, _moveBackParams];
+                _statement = _fnc_move;
+            };
+            _name = getText (_turretConfig >> "gunnerName");
+            _icon = switch true do {
+                case (0 < getNumber (_turretConfig >> "isCopilot")): {ICON_PILOT};
+                case (_role == "gunner"): {ICON_GUNNER};
+                case (_role == "commander"): {ICON_COMMANDER};
+                case (_isPersonTurret): {ICON_FFV};
+                case ("" isEqualTo getText (_turretConfig >> "gun")): {ICON_CARGO};
+                default {ICON_TURRET};
+            };
+        };
     };
+    private _action = [
+        format ["%1%2%3", _role, _cargoIndex, _turretPath],
+        _name, _icon, _statement, {true}, {}, _params
+    ] call EFUNC(interact_menu,createAction);
+    _actions pushBack [_action, [], _vehicle];
 } forEach _fullCrew;
 
 _actions

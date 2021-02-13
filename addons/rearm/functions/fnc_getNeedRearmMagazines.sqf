@@ -41,18 +41,17 @@ private _pylonConfigs = configProperties [configFile >> "CfgVehicles" >> (typeOf
     private _pylonMagazine = (getPylonMagazines _vehicle) select (_pylonIndex - 1);
 
     // Only care about pylons that have a magazine.
-    if (!(_pylonMagazine isEqualTo "")) then {
+    if (_pylonMagazine isEqualTo "") then {continue};
 
-        private _maxRounds = getNumber (configFile >> "CfgMagazines" >> _pylonMagazine >> "count");
-        private _currentRounds = _vehicle ammoOnPylon _pylonIndex;
+    private _maxRounds = getNumber (configFile >> "CfgMagazines" >> _pylonMagazine >> "count");
+    private _currentRounds = _vehicle ammoOnPylon _pylonIndex;
 
-        if (_currentRounds < _maxRounds) then {
-            // getPylonTurret expects 0 based index, and returns driver turret as [-1]
-            private _pylonTurret = [_vehicle, (_pylonIndex - 1)] call EFUNC(common,getPylonTurret);
+    if (_currentRounds >= _maxRounds) then {continue};
 
-            _magazineInfo pushBack [_pylonMagazine, _pylonTurret, true, _pylonIndex, 1, 1, _maxRounds, [_currentRounds]];
-        };
-    };
+    // getPylonTurret expects 0 based index, and returns driver turret as [-1]
+    private _pylonTurret = [_vehicle, (_pylonIndex - 1)] call EFUNC(common,getPylonTurret);
+
+    _magazineInfo pushBack [_pylonMagazine, _pylonTurret, true, _pylonIndex, 1, 1, _maxRounds, [_currentRounds]];
 } forEach _pylonConfigs;
 
 private _turrets = [_vehicle] call FUNC(getAllRearmTurrets);

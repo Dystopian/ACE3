@@ -24,56 +24,54 @@ private _recurseFnc = {
 
     {
         private _entryCfg = _x;
-        if (isClass _entryCfg) then {
-            private _displayName = getText (_entryCfg >> "displayName");
+        private _displayName = getText (_entryCfg >> "displayName");
 
-            private _icon = if (isArray (_entryCfg >> "icon")) then {
-                getArray (_entryCfg >> "icon");
-            } else {
-                [getText (_entryCfg >> "icon"), "#FFFFFF"];
-            };
-            private _statement = compile (getText (_entryCfg >> "statement"));
-
-            private _condition = getText (_entryCfg >> "condition");
-            if (_condition == "") then {
-                _condition = {true};
-            } else {
-                _condition = compile _condition;
-            };
-
-            private _insertChildren = compile (getText (_entryCfg >> "insertChildren"));
-            private _modifierFunction = compile (getText (_entryCfg >> "modifierFunction"));
-
-            private _showDisabled = (getNumber (_entryCfg >> "showDisabled")) > 0;
-            private _enableInside = (getNumber (_entryCfg >> "enableInside")) > 0;
-            private _canCollapse = (getNumber (_entryCfg >> "canCollapse")) > 0;
-            private _runOnHover = true;
-            if (isText (_entryCfg >> "runOnHover")) then {
-                _runOnHover = compile getText (_entryCfg >> "runOnHover");
-            } else {
-                _runOnHover = (getNumber (_entryCfg >> "runOnHover")) > 0;
-            };
-
-            private _children = [_entryCfg] call _recurseFnc;
-
-            private _entry = [
-                        [
-                            configName _entryCfg,
-                            _displayName,
-                            _icon,
-                            _statement,
-                            _condition,
-                            _insertChildren,
-                            {},
-                            [0,0,0],
-                            10, //distace
-                            [_showDisabled,_enableInside,_canCollapse,_runOnHover,false],
-                            _modifierFunction
-                        ],
-                        _children
-                    ];
-            _actions pushBack _entry;
+        private _icon = if (isArray (_entryCfg >> "icon")) then {
+            getArray (_entryCfg >> "icon");
+        } else {
+            [getText (_entryCfg >> "icon"), "#FFFFFF"];
         };
+        private _statement = compile (getText (_entryCfg >> "statement"));
+
+        private _condition = getText (_entryCfg >> "condition");
+        if (_condition == "") then {
+            _condition = {true};
+        } else {
+            _condition = compile _condition;
+        };
+
+        private _insertChildren = compile (getText (_entryCfg >> "insertChildren"));
+        private _modifierFunction = compile (getText (_entryCfg >> "modifierFunction"));
+
+        private _showDisabled = (getNumber (_entryCfg >> "showDisabled")) > 0;
+        private _enableInside = (getNumber (_entryCfg >> "enableInside")) > 0;
+        private _canCollapse = (getNumber (_entryCfg >> "canCollapse")) > 0;
+        private _runOnHover = true;
+        if (isText (_entryCfg >> "runOnHover")) then {
+            _runOnHover = compile getText (_entryCfg >> "runOnHover");
+        } else {
+            _runOnHover = (getNumber (_entryCfg >> "runOnHover")) > 0;
+        };
+
+        private _children = [_entryCfg] call _recurseFnc;
+
+        private _entry = [
+                    [
+                        configName _entryCfg,
+                        _displayName,
+                        _icon,
+                        _statement,
+                        _condition,
+                        _insertChildren,
+                        {},
+                        [0,0,0],
+                        10, //distace
+                        [_showDisabled,_enableInside,_canCollapse,_runOnHover,false],
+                        _modifierFunction
+                    ],
+                    _children
+                ];
+        _actions pushBack _entry;
     } forEach (configProperties [_actionsCfg, "isClass _x", true]);
     _actions
 };
