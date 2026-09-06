@@ -64,9 +64,21 @@ private _checkPos5end = _checkPos5beg vectorAdd (_dir vectorMultiply 1.3);
     ]] call CBA_fnc_addPerFrameHandler;
 #endif
 
-      lineIntersects [_checkPos0beg, _checkPos0end]
-&& {!(lineIntersects [_checkPos1beg, _checkPos1end])}
-&& {!(lineIntersects [_checkPos2beg, _checkPos2end])}
-&& {!(lineIntersects [_checkPos3beg, _checkPos3end])}
-&& {!(lineIntersects [_checkPos4beg, _checkPos4end])}
-&& {!(lineIntersects [_checkPos5beg, _checkPos5end])}
+lineIntersects [[
+    [_checkPos0beg, _checkPos0end],
+    [_checkPos1beg, _checkPos1end],
+    [_checkPos2beg, _checkPos2end],
+    [_checkPos3beg, _checkPos3end],
+    [_checkPos4beg, _checkPos4end],
+    [_checkPos5beg, _checkPos5end]
+]] isEqualTo [true, false, false, false, false, false]
+&& {
+    // glass in some house windows is detected only in FIRE LOD
+    lineIntersectsSurfaces [[
+        [_checkPos1beg, _checkPos1end, _unit, objNull, true, 1, "FIRE"],
+        [_checkPos2beg, _checkPos2end, _unit, objNull, true, 1, "FIRE"],
+        [_checkPos3beg, _checkPos3end, _unit, objNull, true, 1, "FIRE"],
+        [_checkPos4beg, _checkPos4end, _unit, objNull, true, 1, "FIRE"],
+        [_checkPos5beg, _checkPos5end, _unit, objNull, true, 1, "FIRE"]
+    ]] isEqualTo [[], [], [], [], []]
+}
